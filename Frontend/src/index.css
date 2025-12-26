@@ -1,0 +1,5 @@
+@import "tailwindcss";
+/* index.css */
+.bg-hero {
+  @apply bg-black text-white bg-[url('https://raw.githubusercontent.com/prebuiltui/prebuiltui/main/assets/hero/bg-gradient-3.svg')] bg-center bg-cover;
+}
