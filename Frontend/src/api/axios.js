@@ -9,7 +9,9 @@ const api = axios.create({
 api.interceptors.response.use(
   (response) => response,
   (error) => {
-    // Standard global error handling can go here (like 500 errors)
+    if (error.response?.status === 401) {
+      console.warn("Session expired");
+    }
     return Promise.reject(error);
   }
 );

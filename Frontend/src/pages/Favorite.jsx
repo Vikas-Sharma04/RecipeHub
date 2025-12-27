@@ -6,21 +6,25 @@ import { Link } from "react-router-dom";
 import { FaHeart, FaArrowRight, FaRegFrownOpen } from "react-icons/fa";
 
 const Favorites = () => {
-  const { recipes, favorites, toggleFavorite } = useContext(RecipeContext);
+  // Add 'loading' from your Context if available, or use the check below
+  const { recipes, favorites, toggleFavorite, loading } = useContext(RecipeContext);
 
-  // Derive favorite recipes
+  // 1. Derive favorite recipes
   const favoriteRecipes = recipes.filter((r) =>
     favorites.includes(r._id || r.id)
   );
 
   const [displayedRecipes, setDisplayedRecipes] = useState(favoriteRecipes);
 
-  // Update when favorites or recipes change
+  // 2. Sync displayed recipes with favorites/recipes changes
   useEffect(() => {
     setDisplayedRecipes(favoriteRecipes);
   }, [favorites, recipes]);
 
-  if (recipes.length === 0) {
+  // 3. IMPROVED LOADER LOGIC
+  // If we are actually fetching data, show loader. 
+  // Otherwise, if we aren't loading, but recipes are 0, we don't block the UI.
+  if (loading && recipes.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[60vh] space-y-4">
         <div className="w-12 h-12 border-4 border-white/10 border-t-indigo-500 rounded-full animate-spin"></div>
@@ -46,10 +50,12 @@ const Favorites = () => {
         </p>
       </header>
 
-      {/* Search Bar Wrapper */}
-      <div className="max-w-2xl mx-auto mb-16 px-2">
-        <SearchBar recipes={favoriteRecipes} onFilter={setDisplayedRecipes} />
-      </div>
+      {/* Only show search if there are favorites to search through */}
+      {favoriteRecipes.length > 0 && (
+        <div className="max-w-2xl mx-auto mb-16 px-2">
+          <SearchBar recipes={favoriteRecipes} onFilter={setDisplayedRecipes} />
+        </div>
+      )}
 
       {/* Content Grid */}
       <div className="max-w-7xl mx-auto">

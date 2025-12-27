@@ -1,5 +1,4 @@
 import mongoose from "mongoose";
-import userModel from "./user.model.js";
 
 const recipeSchema = new mongoose.Schema(
   {
@@ -13,27 +12,11 @@ const recipeSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
-recipeSchema.pre("remove", async function (next) {
-  try {
-    if (this._id) {
-      await userModel.updateMany(
-        { favorites: this._id },
-        { $pull: { favorites: this._id } }
-      );
-    }
-    next();
-  } catch (err) {
-    console.error("Error in recipe pre-hook:", err);
-    next(err);
-  }
-});
-
-
-// Also handle findOneAndDelete / findByIdAndDelete
 recipeSchema.pre("findOneAndDelete", async function (next) {
   try {
     const doc = await this.model.findOne(this.getFilter());
     if (doc) {
+      const userModel = mongoose.model("user"); 
       await userModel.updateMany(
         { favorites: doc._id },
         { $pull: { favorites: doc._id } }

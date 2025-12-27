@@ -3,9 +3,6 @@ import jwt from 'jsonwebtoken';
 import bcrypt from 'bcrypt';
 import recipeModel from '../models/recipe.model.js';
 
-// Define the 7-day duration in milliseconds
-const SEVEN_DAYS_IN_MS = 7 * 24 * 60 * 60 * 1000;
-
 const getUserController = async (req, res) => {
   try {
     const token = req.cookies.token;
@@ -42,12 +39,11 @@ const registerController = async (req, res) => {
 
     const token = jwt.sign({ _id: user._id }, process.env.JWT_SECRET, { expiresIn: "7d" });
 
-    // UPDATE: Added maxAge for 7-day persistence
     res.cookie("token", token, {
       httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-      sameSite: "strict",
-      maxAge: SEVEN_DAYS_IN_MS, 
+      secure: true, 
+      sameSite: "none", 
+      maxAge: 7 * 24 * 60 * 60 * 1000, 
     });
 
     const { password: _, ...userData } = user.toObject();
@@ -83,9 +79,9 @@ const loginController = async (req, res) => {
     // UPDATE: Added maxAge for 7-day persistence
     res.cookie("token", token, {
       httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-      sameSite: "strict",
-      maxAge: SEVEN_DAYS_IN_MS,
+      secure: true, 
+      sameSite: "none", 
+      maxAge: 7 * 24 * 60 * 60 * 1000, 
     });
 
     const { password: _, ...userData } = user.toObject();
@@ -103,8 +99,8 @@ const loginController = async (req, res) => {
 const logoutController = async (req, res) => {
   res.clearCookie("token", {
     httpOnly: true,
-    secure: process.env.NODE_ENV === "production",
-    sameSite: "strict"
+    secure: true,
+    sameSite: "none"
   });
   res.json({
     message: "Logged out successfully"
@@ -127,8 +123,8 @@ const deleteAccountController = async (req, res) => {
 
     res.clearCookie("token", {
       httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-      sameSite: "strict",
+      secure: true,
+      sameSite: "none",
     });
 
     res.status(200).json({ message: "Account and all your recipes deleted successfully" });

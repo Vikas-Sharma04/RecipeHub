@@ -1,4 +1,4 @@
-import React, { useContext, useEffect, useState } from "react"; // Added useEffect, useState
+import React, { useContext, useEffect, useState, useRef } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { RecipeContext } from "../context/RecipeContext";
 import RecipeCard from "../components/RecipeCard";
@@ -8,18 +8,31 @@ const Home = () => {
   const { recipes, fetchRecipes } = useContext(RecipeContext);
   const [fetching, setFetching] = useState(false);
   const navigate = useNavigate();
+  
+  // Use a ref to prevent multiple fetch calls if the component re-renders quickly
+  const hasFetched = useRef(false);
 
-  // 1. Fetch recipes if they haven't been loaded yet
   useEffect(() => {
     const initHome = async () => {
-      if (recipes.length === 0) {
+      // If we already have recipes or are currently fetching, don't start again
+      if (recipes.length > 0 || hasFetched.current) return;
+
+      try {
+        hasFetched.current = true;
         setFetching(true);
         await fetchRecipes();
+      } catch (err) {
+        console.error("Failed to load home recipes", err);
+        hasFetched.current = false; // Allow retry if it failed
+      } finally {
         setFetching(false);
       }
     };
+
     initHome();
-  }, [fetchRecipes, recipes.length]);
+    // Only run on mount
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []); 
 
   // Take first 3 recipes as featured
   const featuredRecipes = recipes.slice(0, 3);

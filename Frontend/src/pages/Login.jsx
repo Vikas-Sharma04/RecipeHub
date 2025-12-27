@@ -19,11 +19,11 @@ const Login = () => {
   const onSubmit = async (data) => {
     try {
       setLoading(true);
-      await login(data);
+      await login(data); 
       toast.success("Welcome back!");
       navigate("/");
     } catch (err) {
-      toast.error(err.response?.data?.message || "Login failed");
+      toast.error(err.response?.data?.message || "Invalid Login");
     } finally {
       setLoading(false);
     }

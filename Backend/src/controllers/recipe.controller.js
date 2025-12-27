@@ -63,30 +63,19 @@ const generateRecipeController = async (req, res) => {
 const deleteRecipeController = async (req, res) => {
   try {
     const { id } = req.params;
-
-    // Find recipe first
     const recipe = await recipeModel.findById(id);
-    if (!recipe) {
-      return res.status(404).json({ message: "Recipe not found" });
-    }
 
-    // Check ownership
+    if (!recipe) return res.status(404).json({ message: "Recipe not found" });
+
     if (recipe.user.toString() !== req.user._id.toString()) {
-      return res.status(403).json({ message: "You are not allowed to delete this recipe" });
+      return res.status(403).json({ message: "Unauthorized deletion" });
     }
 
-    // Delete recipe
-    await recipe.deleteOne();
-
-    // Remove recipe from all users' favorites
-    await userModel.updateMany(
-      { favorites: recipe._id },
-      { $pull: { favorites: recipe._id } }
-    );
+    // This triggers your model's middleware to clean up favorites
+    await recipe.deleteOne(); 
 
     res.status(200).json({ message: "Recipe deleted successfully" });
   } catch (err) {
-    console.error(err);
     res.status(500).json({ message: err.message });
   }
 };
@@ -131,24 +120,23 @@ const getMyRecipesController = async (req, res) => {
 // Toggle favorite status of a recipe
 const toggleFavoriteRecipeController = async (req, res) => {
   try {
-    const { id } = req.params; // recipe id
-    const user = await userModel.findById(req.user._id);
+    const { id } = req.params;
+    const userId = req.user._id;
 
-    if (!user) return res.status(404).json({ message: "User not found" });
+    const user = await userModel.findById(userId);
+    const isFavorite = user.favorites.includes(id);
 
-    const index = user.favorites.findIndex(favId => favId.toString() === id);
-
-    if (index > -1) {
-      user.favorites.splice(index, 1); // remove
-    } else {
-      user.favorites.push(id); // add
-    }
-
-    await user.save();
+    const updatedUser = await userModel.findByIdAndUpdate(
+      userId,
+      isFavorite 
+        ? { $pull: { favorites: id } } 
+        : { $addToSet: { favorites: id } },
+      { new: true }
+    );
 
     res.status(200).json({
-      message: "Favorites updated",
-      favorites: user.favorites
+      message: isFavorite ? "Removed from favorites" : "Added to favorites",
+      favorites: updatedUser.favorites
     });
   } catch (err) {
     res.status(500).json({ message: err.message });

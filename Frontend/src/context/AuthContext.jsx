@@ -37,9 +37,10 @@ const AuthProvider = ({ children }) => {
     try {
       const res = await loginUser(data);
       setUser(res.data.user);
-      toast.success("Logged in successfully 🎉");
+      return res.data;
     } catch (err) {
       toast.error(err.response?.data?.message || "Login failed");
+      throw err;
     }
   };
 
